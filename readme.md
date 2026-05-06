@@ -1,39 +1,93 @@
-# Food Delivery System - Cloud Computing 2026
+# CloudExpress 🍔☁️  
+**A Cloud-Native Microservices Food Delivery Marketplace**
 
-## 1. Project Overview
-This project is a scalable, microservice-based Food Delivery System designed to connect customers, restaurants, and delivery personnel. The system architecture focuses on high availability, loose coupling, and containerized deployment using modern DevOps tools[cite: 1].
+## 📌 Project Vision
+CloudExpress is a scalable, cloud-native food delivery platform designed as a **multi-restaurant marketplace**. It enables multiple restaurants to independently manage their menus while allowing users to browse, order, and track food in real time.
 
-## 2. Microservices Architecture
-The system is divided into at least three independent services that communicate via HTTP APIs[cite: 1]:
+The system is built using a **microservices architecture**, ensuring high scalability, resilience, and modularity—key characteristics of modern distributed systems.
 
-*   **User Management Service**: Handles registration and profiles for customers and delivery personnel[cite: 1].
-*   **Restaurant Service**: Manages restaurant data, menus, and real-time item availability[cite: 1].
-*   **Order Service**: Responsible for order creation, status tracking, and communicating with the Restaurant Service to verify availability[cite: 1].
-*   **Database**: A PostgreSQL instance utilized for persistent storage across services[cite: 1].
+---
 
-## 3. General Requirements Met
-*   **Linux Hosting**: The project is developed and hosted on a Linux distribution[cite: 1].
-*   **Containerization**: 
-    *   Each service (User, Restaurant, Order) is containerized using custom, optimized Docker images[cite: 1].
-    *   The application uses at least three different custom images[cite: 1].
-*   **Multi-Environment Support**: 
-    *   **Development**: Managed via `docker-compose.yml` for local integration testing[cite: 1].
-    *   **Production/Orchestration**: Managed via Kubernetes manifests for scaling and reliability[cite: 1].
-*   **Orchestration**: Services are deployed and managed using Kubernetes (Minikube), ensuring efficient orchestration[cite: 1].
+## 🏗️ System Architecture
 
-## 4. Setup and Installation
+CloudExpress follows a **Microservices + Event-Driven Architecture**:
 
-### Local Development (Docker-Compose)
-To spin up the entire application stack locally:
+- **User Service**
+  - Handles authentication (JWT-based)
+  - Manages user roles (Admin / Customer)
+
+- **Restaurant Service**
+  - Supports multi-tenant restaurant management
+  - Each restaurant has its own menu and data isolation
+
+- **Order Service**
+  - Handles order creation
+  - Publishes order events asynchronously
+
+- **RabbitMQ (Message Broker)**
+  - Decouples services
+  - Enables asynchronous processing via queues
+
+### 🔄 Flow Overview
+
+1. User authenticates via User Service
+2. User browses restaurants via Restaurant Service
+3. User places order → Order Service
+4. Order is:
+   - Stored in PostgreSQL
+   - Published to RabbitMQ (`order_queue`)
+5. Consumers process orders asynchronously
+
+---
+
+## 🗄️ Database Design
+
+Relational schema using **PostgreSQL**:
+
+### Tables:
+
+- **Users**
+  - `id`, `email`, `password`, `role`
+
+- **Restaurants**
+  - `id`, `name`, `owner_id`
+
+- **MenuItems**
+  - `id`, `name`, `price`, `restaurant_id`
+
+- **Orders**
+  - `id`, `user_id`, `restaurant_id`, `status`
+
+### 🏢 Multi-Tenancy Strategy
+
+- Achieved using `restaurant_id` as a foreign key
+- Each restaurant operates independently
+- Data isolation is enforced at query level
+
+---
+
+## 📨 Asynchronous Messaging (RabbitMQ)
+
+CloudExpress uses the **Producer-Consumer Pattern**:
+
+- **Producer**: Order Service
+  - Sends messages to `order_queue` when an order is placed
+
+- **Consumer**:
+  - Listens to queue
+  - Processes order (e.g., update status, notify systems)
+
+### ✅ Benefits:
+
+- Non-blocking operations
+- Improved system responsiveness
+- Fault tolerance (queue persists messages)
+
+---
+
+## 🚀 Deployment Guide
+
+### 1. Clone Repository
+
 ```bash
-docker-compose up --build
-
-User Service: http://localhost:3001
-
-Restaurant Service: http://localhost:3002
-
-Order Service: http://localhost:3003
-
-
-
-## Production Deployment (Kubernetes)
+git clone https://github.com/mohmedbakr1911/final_working_cloud_project.git
