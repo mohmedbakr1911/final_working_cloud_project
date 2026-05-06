@@ -1,0 +1,16 @@
+services:
+  user-service:
+    build: ./user-service
+    command: npx nodemon index.js
+    volumes:
+      - ./user-service:/app
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_delivery
+      - PORT=3000
+    ports:
+      - "3001:3000"
+    networks:
+      - food-network
+
+  # Repeat similar blocks for restaurant-service (Port 3002) 
+  # and order-service (Port 3003)

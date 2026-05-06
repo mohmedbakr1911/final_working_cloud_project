@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  replicas: 2 # Scalability requirement met!
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+      - name: user-service
+        image: food-delivery-cloud_user-service:latest # Use the image you just built
+        imagePullPolicy: Never # Uses local image
+        env:
+        - name: DATABASE_URL
+          value: "postgres://user:password@db:5432/food_db"
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+spec:
+  type: NodePort # This allows you to access it from your browser/CLI
+  selector:
+    app: user-service
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30001
