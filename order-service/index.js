@@ -3,12 +3,17 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const amqp = require('amqplib');
 require('dotenv').config();
+const client = require('prom-client');
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
 
 // Helper: Send message to RabbitMQ
 async function sendToQueue(orderData) {
@@ -26,6 +31,12 @@ async function sendToQueue(orderData) {
         console.error("RabbitMQ Producer Error:", err);
     }
 }
+
+
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+});
 
 // Unified Order Route
 app.post('/orders', async (req, res) => {

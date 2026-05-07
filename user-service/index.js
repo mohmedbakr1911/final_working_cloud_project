@@ -1,6 +1,10 @@
 const express = require('express');
 const pool = require('./db');
 const cors = require('cors');
+const client = require('prom-client');
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+
 require('dotenv').config();
 
 const app = express();
@@ -49,6 +53,12 @@ app.post('/register', async (req, res) => {
     } catch (err) {
         res.status(400).json({ error: "Username already exists" });
     }
+});
+
+
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
 });
 
 // restaurant-service/index.js

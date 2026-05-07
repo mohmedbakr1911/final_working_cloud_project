@@ -2,6 +2,10 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const app = express();
+const client = require('prom-client');
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+
 
 app.use(cors());
 app.use(express.json());
@@ -30,6 +34,12 @@ app.get('/restaurants/:id/menu', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+});
+
 
 // 3. Admin: Add item to a specific restaurant
 app.post('/restaurant/menu', async (req, res) => {
