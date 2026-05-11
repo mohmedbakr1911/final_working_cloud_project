@@ -1,7 +1,7 @@
-DROP TABLE IF EXISTS orders;
-DROP TABLE IF EXISTS menu_items;
-DROP TABLE IF EXISTS restaurants;
-DROP TABLE IF EXISTS users;
+-- DROP TABLE IF EXISTS orders;
+-- DROP TABLE IF EXISTS menu_items;
+-- DROP TABLE IF EXISTS restaurants;
+-- DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
