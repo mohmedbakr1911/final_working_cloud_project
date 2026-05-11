@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: food_db_test
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: food_db_test            # isolated test database
+    ports:
+      - "5434:5432"                        # different from dev (5433) and prod (5432)
+    networks:
+      - food-network-test
+
+  user-service:
+    container_name: user_service_test
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_db_test
+      - NODE_ENV=test
+    ports:
+      - "5001:3000"                        # different from dev (4001) and prod (3001)
+    networks:
+      - food-network-test
+
+  restaurant-service:
+    container_name: restaurant_service_test
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_db_test
+      - NODE_ENV=test
+    ports:
+      - "5002:3000"
+    networks:
+      - food-network-test
+
+  order-service:
+    container_name: order_service_test
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_db_test
+      - RESTAURANT_SERVICE_URL=http://restaurant-service:3000
+      - NODE_ENV=test
+    ports:
+      - "5003:3000"
+    networks:
+      - food-network-test
+
+  payment-service:
+    container_name: payment_service_test
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_db_test
+      - RABBITMQ_URL=amqp://rabbitmq
+      - NODE_ENV=test
+    ports:
+      - "5004:3000"
+    networks:
+      - food-network-test
+
+  frontend:
+    container_name: frontend_service_test
+    ports:
+      - "8082:8080"                        # different from dev (8081) and prod (8080)
+    networks:
+      - food-network-test
+
+  rabbitmq:
+    container_name: rabbitmq_test
+    ports:
+      - "5674:5672"                        # different from dev (5673) and prod (5672)
+      - "15674:15672"                      # different from dev (15673) and prod (15672)
+    networks:
+      - food-network-test
+
+  prometheus:
+    container_name: prometheus_test
+    ports:
+      - "9092:9090"                        # different from dev (9091) and prod (9090)
+    networks:
+      - food-network-test
+
+  grafana:
+    container_name: grafana_test
+    ports:
+      - "3006:3000"                        # different from dev (3005) and prod (3000)
+    networks:
+      - food-network-test
+
+networks:
+  food-network-test:
+    driver: bridge

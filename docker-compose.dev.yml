@@ -1,16 +1,104 @@
-services:
-  user-service:
-    build: ./user-service
-    command: npx nodemon index.js
-    volumes:
-      - ./user-service:/app
-    environment:
-      - DATABASE_URL=postgres://user:password@db:5432/food_delivery
-      - PORT=3000
-    ports:
-      - "3001:3000"
-    networks:
-      - food-network
+version: '3.8'
 
-  # Repeat similar blocks for restaurant-service (Port 3002) 
-  # and order-service (Port 3003)
+services:
+  db:
+    container_name: food_db_dev
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: food_db_dev
+    ports:
+      - "5433:5432"                         # different from prod (5432)
+    networks:
+      - food-network-dev
+
+  user-service:
+    container_name: user_service_dev
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_db_dev
+      - NODE_ENV=development
+    ports:
+      - "4001:3000"                         # different from prod (3001)
+    volumes:
+      - ./user-service:/usr/src/app         # live code reload
+      - /usr/src/app/node_modules           # preserve container node_modules
+    command: npx nodemon index.js
+    networks:
+      - food-network-dev
+
+  restaurant-service:
+    container_name: restaurant_service_dev
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_db_dev
+      - NODE_ENV=development
+    ports:
+      - "4002:3000"
+    volumes:
+      - ./restaurant-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npx nodemon index.js
+    networks:
+      - food-network-dev
+
+  order-service:
+    container_name: order_service_dev
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_db_dev
+      - RESTAURANT_SERVICE_URL=http://restaurant-service:3000
+      - NODE_ENV=development
+    ports:
+      - "4003:3000"
+    volumes:
+      - ./order-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npx nodemon index.js
+    networks:
+      - food-network-dev
+
+  payment-service:
+    container_name: payment_service_dev
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_db_dev
+      - RABBITMQ_URL=amqp://rabbitmq
+      - NODE_ENV=development
+    ports:
+      - "4004:3000"
+    volumes:
+      - ./payment-service:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npx nodemon index.js
+    networks:
+      - food-network-dev
+
+  frontend:
+    container_name: frontend_service_dev
+    ports:
+      - "8081:8080"                         # different from prod (8080)
+    networks:
+      - food-network-dev
+
+  rabbitmq:
+    container_name: rabbitmq_dev
+    ports:
+      - "5673:5672"                         # different from prod (5672)
+      - "15673:15672"                       # different from prod (15672)
+    networks:
+      - food-network-dev
+
+  prometheus:
+    container_name: prometheus_dev
+    ports:
+      - "9091:9090"                         # different from prod (9090)
+    networks:
+      - food-network-dev
+
+  grafana:
+    container_name: grafana_dev
+    ports:
+      - "3005:3000"                         # different from prod (3000)
+    networks:
+      - food-network-dev
+
+networks:
+  food-network-dev:
+    driver: bridge
