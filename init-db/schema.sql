@@ -33,6 +33,14 @@ CREATE TABLE orders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS payments (
+    id          SERIAL PRIMARY KEY,
+    order_id    INTEGER NOT NULL,
+    user_id     INTEGER NOT NULL,
+    amount      NUMERIC(10, 2) NOT NULL,
+    status      VARCHAR(20) NOT NULL DEFAULT 'Pending',
+    created_at  TIMESTAMP NOT NULL DEFAULT NOW()
+);
 -- Seed Data: Create two different restaurants
 INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin') ON CONFLICT DO NOTHING;
 

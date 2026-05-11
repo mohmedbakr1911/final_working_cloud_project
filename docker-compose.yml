@@ -61,6 +61,22 @@ services:
     networks:
       - food-network
 
+# Payment Service (Port 3004)
+  payment-service:
+    build: ./payment-service
+    container_name: payment_service
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/food_db
+      - RABBITMQ_URL=amqp://rabbitmq
+    ports:
+      - "3004:3000"
+    depends_on:
+      - db
+      - rabbitmq
+    networks:
+      - food-network
+
+
   frontend:
     build: ./frontend
     container_name: frontend_service
@@ -73,6 +89,7 @@ services:
       - restaurant-service
       - order-service
       - rabbitmq
+      - payment-service
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
