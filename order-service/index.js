@@ -7,18 +7,27 @@ const client = require('prom-client');
 const collectDefaultMetrics = client.collectDefaultMetrics;
 collectDefaultMetrics();
 
-
 const app = express();
-app.use(cors());
+
+// 1. Fixed CORS to match other services
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+// 2. HEALTH CHECK (Mandatory for K8s)
+app.get('/health', (req, res) => res.status(200).send('Order Service is Healthy'));
 
 // Helper: Send message to RabbitMQ
 async function sendToQueue(orderData) {
     try {
-        const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://rabbitmq');
+        // Updated to use environment variable for RabbitMQ host
+        const rabbitUrl = process.env.RABBITMQ_URL || 'amqp://rabbitmq';
+        const connection = await amqp.connect(rabbitUrl);
         const channel = await connection.createChannel();
         const queue = 'order_queue';
 
@@ -32,27 +41,21 @@ async function sendToQueue(orderData) {
     }
 }
 
-
 app.get('/metrics', async (req, res) => {
     res.set('Content-Type', client.register.contentType);
     res.end(await client.register.metrics());
 });
 
-// Unified Order Route
 app.post('/orders', async (req, res) => {
     const { userId, itemId, restaurantId } = req.body;
     try {
-        // 1. Save to DB (Synchronous)
         const result = await pool.query(
             'INSERT INTO orders (user_id, item_id, restaurant_id, status) VALUES ($1, $2, $3, $4) RETURNING *',
             [userId, itemId, restaurantId, 'Pending']
         );
         const newOrder = result.rows[0];
-
-        // 2. Push to RabbitMQ (Asynchronous)
         await sendToQueue(newOrder);
 
-        // 3. Respond immediately
         res.status(202).json({
             message: "Order received and is being processed",
             order: newOrder
@@ -63,4 +66,5 @@ app.post('/orders', async (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log('Order Service running on port 3000'));
+const PORT = 3000;
+app.listen(PORT, () => console.log(`Order Service running on port ${PORT}`));

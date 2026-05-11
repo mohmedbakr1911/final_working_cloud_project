@@ -1,18 +1,25 @@
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
-const app = express();
 const client = require('prom-client');
+const app = express();
+
 const collectDefaultMetrics = client.collectDefaultMetrics;
 collectDefaultMetrics();
 
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.use(cors());
 app.use(express.json());
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// 1. Get all restaurants for the Marketplace
+// Health Check (MANDATORY for Kubernetes Probes)
+app.get('/health', (req, res) => res.status(200).send('Restaurant Service is Healthy'));
+
 app.get('/restaurants', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM restaurants');
@@ -22,7 +29,6 @@ app.get('/restaurants', async (req, res) => {
     }
 });
 
-// 2. Get menu for a SPECIFIC restaurant
 app.get('/restaurants/:id/menu', async (req, res) => {
     try {
         const result = await pool.query(
@@ -40,8 +46,6 @@ app.get('/metrics', async (req, res) => {
     res.end(await client.register.metrics());
 });
 
-
-// 3. Admin: Add item to a specific restaurant
 app.post('/restaurant/menu', async (req, res) => {
     const { restaurant_id, name, price } = req.body;
     try {
@@ -68,4 +72,6 @@ app.post('/restaurants', async (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log('Multi-Tenant Restaurant Service on 3000'));
+// Set port to 3000 to match ContainerPort
+const PORT = 3000;
+app.listen(PORT, () => console.log(`Restaurant Service running on port ${PORT}`));

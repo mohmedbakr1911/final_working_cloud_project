@@ -1,7 +1,10 @@
-FROM node:20-alpine
-WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm install --only=production
-COPY . .
-EXPOSE 8080
-CMD ["node", "index.js"]
+FROM nginx:alpine
+
+# 1. Clear out the default Nginx files
+RUN rm -rf /usr/share/nginx/html/*
+
+# 2. Copy ONLY the contents of your public folder
+# This puts your index.html exactly where Nginx expects it
+COPY public/ /usr/share/nginx/html/
+
+EXPOSE 80

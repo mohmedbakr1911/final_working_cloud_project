@@ -22,8 +22,18 @@ spec:
           value: "password"
         - name: POSTGRES_DB
           value: "food_db"
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         ports:
         - containerPort: 5432
+        volumeMounts:
+        - name: db-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: db-storage
+        hostPath:
+          path: /data/db-data
+          type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service

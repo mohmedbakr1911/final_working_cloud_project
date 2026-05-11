@@ -9,7 +9,13 @@ require('dotenv').config();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: '*', // For development, allow everything
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+//app.options('*', cors());
 
 // Health Check
 app.get('/health', (req, res) => res.status(200).send('User Service is Healthy'));
@@ -17,10 +23,10 @@ app.get('/health', (req, res) => res.status(200).send('User Service is Healthy')
 // Register a new user (Customer or Delivery)
 app.post('/users', async (req, res) => {
     try {
-        const { name, role } = req.body;
+        const { username, role, password } = req.body;
         const result = await pool.query(
-            'INSERT INTO users (name, role) VALUES ($1, $2) RETURNING *',
-            [name, role]
+            'INSERT INTO users (username, role, password) VALUES ($1, $2, $3) RETURNING *',
+            [username, role, password]
         );
         res.status(201).json(result.rows[0]);
     } catch (err) {
