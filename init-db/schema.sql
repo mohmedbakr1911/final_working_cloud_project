@@ -3,6 +3,9 @@
 -- DROP TABLE IF EXISTS restaurants;
 -- DROP TABLE IF EXISTS users;
 
+ALTER TABLE orders ADD COLUMN status VARCHAR(20) DEFAULT 'Placed';
+-- Statuses: Placed -> Paid -> Preparing -> Out for Delivery -> Delivered
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,

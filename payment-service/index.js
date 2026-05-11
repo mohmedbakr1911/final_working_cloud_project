@@ -8,7 +8,12 @@ const collectDefaultMetrics = client.collectDefaultMetrics;
 collectDefaultMetrics();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+
+}));
 app.use(express.json());
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -18,7 +23,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 // Mirrors the exact sendToQueue pattern used in order-service/index.js.
 async function sendToQueue(paymentData) {
     try {
-        const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://rabbitmq');
+        const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://rabbitmq-service:5672');
         const channel = await connection.createChannel();
         const queue = 'payment_queue';
 
@@ -38,7 +43,7 @@ async function sendToQueue(paymentData) {
 // This mirrors the async worker pattern expected in the architecture.
 async function startConsumer() {
     try {
-        const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://rabbitmq');
+        const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://rabbitmq-service:5672');
         const channel = await connection.createChannel();
         const queue = 'payment_queue';
 

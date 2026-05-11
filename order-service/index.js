@@ -46,6 +46,20 @@ app.get('/metrics', async (req, res) => {
     res.end(await client.register.metrics());
 });
 
+// GET /orders/:id/status
+app.get('/orders/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query('SELECT id, status, updated_at FROM orders WHERE id = $1', [id]);
+        
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 app.post('/orders', async (req, res) => {
     const { userId, itemId, restaurantId } = req.body;
     try {
